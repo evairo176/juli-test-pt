@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import "../home/home.css";
 import { useDispatch, useSelector } from "react-redux";
 import { setData } from "../../redux/action/globalAction";
+import moment from "moment";
 
 const API_KEY = "960ecb7a113224110c918af38166f74a";
 
@@ -21,6 +22,7 @@ function Home() {
       );
 
       const data = await response.json();
+
       const dailyForecast = extractDailyForecast(data.list);
       dispatch(setData(dailyForecast));
     } catch (error) {
@@ -92,7 +94,11 @@ function Home() {
         {isData &&
           isData?.map((item) => (
             <li key={item.dt}>
-              {`${item.dt_txt}: ${item.main.temp}°C - ${item.weather[0].description}`}
+              {`${moment(item.dt_txt)
+                .locale("en")
+                .format("dddd, D MMMM YYYY")}: ${item.main.temp}°C - ${
+                item.weather[0].description
+              }`}
             </li>
           ))}
       </ul>
