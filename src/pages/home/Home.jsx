@@ -1,45 +1,52 @@
 import React, { useEffect, useState } from "react";
+import "../home/home.css";
+import { useDispatch, useSelector } from "react-redux";
+import { setData } from "../../redux/action/globalAction";
 
 const API_KEY = "960ecb7a113224110c918af38166f74a";
 
 function Home() {
-  const [weatherForecast, setWeatherForecast] = useState([]);
+  const [forecast, setForecast] = useState([]);
+  const dispatch = useDispatch();
+  const storeData = useSelector((store) => store?.global);
+  const { isData } = storeData;
 
   useEffect(() => {
-    const fetchWeatherForecast = async () => {
-      try {
-        const response = await fetch(
-          `https://api.openweathermap.org/data/3.0/forecast?q=Jakarta,id&appid=${API_KEY}`
-        );
-        const data = await response.json();
-
-        const forecasts = data.list;
-        const weatherData = {};
-
-        forecasts.forEach((forecast) => {
-          const date = forecast.dt_txt.split(" ")[0];
-          const temperature = forecast.main.temp;
-
-          if (!(date in weatherData)) {
-            weatherData[date] = temperature;
-          }
-        });
-
-        const forecastList = Object.entries(weatherData).map(
-          ([date, temperature]) => ({
-            date,
-            temperature,
-          })
-        );
-
-        setWeatherForecast(forecastList);
-      } catch (error) {
-        console.log("Error:", error);
-      }
-    };
-
     fetchWeatherForecast();
   }, []);
+
+  const fetchWeatherForecast = async () => {
+    try {
+      const response = await fetch(
+        `http://api.openweathermap.org/data/2.5/forecast?q=Jakarta&appid=${API_KEY}&units=metric&cnt=40`
+      );
+
+      const data = await response.json();
+
+      dispatch(setData(data));
+
+      const dailyForecast = extractDailyForecast(data.list);
+      setForecast(dailyForecast);
+    } catch (error) {
+      console.log("Error fetching weather forecast:", error);
+    }
+  };
+
+  const extractDailyForecast = (forecastList) => {
+    const dailyForecast = [];
+    const uniqueDates = [];
+
+    forecastList.forEach((item) => {
+      const date = item.dt_txt.split(" ")[0];
+
+      if (!uniqueDates.includes(date)) {
+        uniqueDates.push(date);
+        dailyForecast.push(item);
+      }
+    });
+
+    return dailyForecast;
+  };
 
   const numbers = Array.from({ length: 100 }, (_, i) => i + 1);
 
@@ -84,15 +91,13 @@ function Home() {
 
   return (
     <div>
-      <h1>Ramalan Cuaca Jakarta untuk 5 hari ke depan:</h1>
+      <h1>Weather Forecast for Jakarta</h1>
       <ul>
-        {weatherForecast
-          ? weatherForecast.map((forecast) => (
-              <li key={forecast.date}>
-                {forecast.date}: {forecast.temperature} K
-              </li>
-            ))
-          : "sorry we not have data"}
+        {forecast.map((item) => (
+          <li key={item.dt}>
+            {`${item.dt_txt}: ${item.main.temp}°C - ${item.weather[0].description}`}
+          </li>
+        ))}
       </ul>
     </div>
   );
