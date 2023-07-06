@@ -6,7 +6,6 @@ import { setData } from "../../redux/action/globalAction";
 const API_KEY = "960ecb7a113224110c918af38166f74a";
 
 function Home() {
-  const [forecast, setForecast] = useState([]);
   const dispatch = useDispatch();
   const storeData = useSelector((store) => store?.global);
   const { isData } = storeData;
@@ -22,11 +21,8 @@ function Home() {
       );
 
       const data = await response.json();
-
-      dispatch(setData(data));
-
       const dailyForecast = extractDailyForecast(data.list);
-      setForecast(dailyForecast);
+      dispatch(setData(dailyForecast));
     } catch (error) {
       console.log("Error fetching weather forecast:", error);
     }
@@ -93,11 +89,12 @@ function Home() {
     <div>
       <h1>Weather Forecast for Jakarta</h1>
       <ul>
-        {forecast.map((item) => (
-          <li key={item.dt}>
-            {`${item.dt_txt}: ${item.main.temp}°C - ${item.weather[0].description}`}
-          </li>
-        ))}
+        {isData &&
+          isData?.map((item) => (
+            <li key={item.dt}>
+              {`${item.dt_txt}: ${item.main.temp}°C - ${item.weather[0].description}`}
+            </li>
+          ))}
       </ul>
     </div>
   );
